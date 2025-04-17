@@ -1,7 +1,9 @@
 package com.oms.orderservice.controller;
 
-import com.oms.orderservice.model.Order;
+import com.oms.orderservice.dto.OrderRequest;
+import com.oms.orderservice.dto.OrderResponse;
 import com.oms.orderservice.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,17 +17,17 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public Order createOrder(@RequestBody Order order) {
-        return orderService.createOrder(order);
+    public OrderResponse createOrder(@RequestBody @Valid OrderRequest request) {
+        return orderService.createOrder(request);
     }
 
     @GetMapping
-    public List<Order> getAllOrders() {
+    public List<OrderResponse> getAllOrders() {
         return orderService.getAllOrders();
     }
 
     @GetMapping("/{id}")
-    public Order getOrder(@PathVariable Long id) {
+    public OrderResponse getOrder(@PathVariable Long id) {
         return orderService.getOrderById(id);
     }
 }
