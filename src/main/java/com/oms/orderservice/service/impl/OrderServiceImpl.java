@@ -1,7 +1,9 @@
 package com.oms.orderservice.service.impl;
 
+import com.oms.orderservice.dto.OrderEvent;
 import com.oms.orderservice.dto.OrderRequest;
 import com.oms.orderservice.dto.OrderResponse;
+import com.oms.orderservice.kafka.KafkaProducerService;
 import com.oms.orderservice.model.Order;
 import com.oms.orderservice.repository.OrderRepository;
 import com.oms.orderservice.service.OrderService;
@@ -12,10 +14,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final KafkaProducerService kafkaProducerService;
+
+    public OrderServiceImpl(OrderRepository orderRepository,
+                            KafkaProducerService kafkaProducerService) {
+        this.orderRepository = orderRepository;
+        this.kafkaProducerService = kafkaProducerService;
+    }
 
     @Override
     public OrderResponse createOrder(OrderRequest request) {
@@ -26,9 +34,15 @@ public class OrderServiceImpl implements OrderService {
                 .status("CREATED")
                 .build();
 
-        Order saved = orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        OrderEvent event = new OrderEvent(
+                String.valueOf(savedOrder.getId()),
+                "CREATED",
+                "Order has been placed successfully"
+        );
+        kafkaProducerService.sendMessage(event);
 
-        return mapToResponse(saved);
+        return mapToResponse(savedOrder);
     }
 
     @Override
